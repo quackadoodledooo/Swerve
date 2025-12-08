@@ -1,98 +1,80 @@
 #include <PestoLink-Receive.h>
-#include <Alfredo_NoU3.h>
+#include <Keys.h>
+#include <Arduino.h>
 #include <cmath>
 #include <tgmath.h>
+#include "SwerveModule.h"
+#include "SwerveDrivetrain.h"
+#include <FastLED.h>
 
-//Drivetrain Motor/Servo Declarations
-NoU_Motor Drive1(1);
-NoU_Servo Turn1(1, 500, 2500);
-NoU_Motor Drive2(2);
-NoU_Servo Turn2(2, 500, 2500);
-NoU_Motor Drive3(3);
-NoU_Servo Turn3(3, 500, 2500);
-NoU_Motor Drive4(4);
-NoU_Servo Turn4(4, 500, 2500);
+#define PI 3.14159265359
 
-//turn magnitude and the vectors for each individual module in format {{mag1, dir1}, {mag2, dir2}, {mag3, dir3}, {mag4, dir4}}
+//Swerve vars
 double turnMag = 0.0;
 double driveAngle = 0.0;
 double driveMag = 0.0;
-double drivetrainVectors[4][2] = 
-{ { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 } };
-
+double drivetrainVectors[4][2] = { { 0, 0 },
+                                  { 0, 0 },
+                                  { 0, 0 },
+                                  { 0, 0 } };
 double theta;
 double headingOffset = 0.0;
-int mod1Offset = 0;
-int mod2Offset = 0;
-int mod3Offset = 0;
-int mod4Offset = 0;
+int mod1Offset = 405;
+int mod2Offset = 135;
+int mod3Offset = 315;
+int mod4Offset = 225;
 int lastOffsetTime = millis();
-
 const bool AM_DEBUGGING = false;
 
+//swerve motors and servos declaration
+NoU_Motor Drive1(4);
+NoU_Servo Turn1(2, 500, 2500);
+NoU_Motor Drive2(5);
+NoU_Servo Turn2(1, 500, 2500);
+NoU_Motor Drive3(8);
+NoU_Servo Turn3(3, 500, 2500);
+NoU_Motor Drive4(1);
+NoU_Servo Turn4(4, 500, 2500);
+
+//swerve module declaration
+SwerveModule module1(&Drive1, &Turn1, 500, 2500, 1);
+SwerveModule module2(&Drive2, &Turn2, 500, 2500, 2);
+SwerveModule module3(&Drive3, &Turn3, 500, 2500, 3);
+SwerveModule module4(&Drive4, &Turn4, 500, 2500, 4);
+
+//swerve drivetrain declaration
+SwerveDrivetrain drivetrain(&module1, &module2, &module3, &module4);
+
+//The gyroscope sensor is by default precise, but not accurate. This is fixable by adjusting the angular scale factor.
+//Tuning procedure:
+//Rotate the robot in place 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
+//measured_angle should be nearly 31.416 which is 5*2*pi. Update measured_angle below to complete the tuning process.
+int measured_angle = 27.562;
+int angular_scale = (5.0 * 2.0 * PI) / measured_angle;
+
 void setup() {
-  //Basic Board Setup
   NoU3.begin();
-  NoU3.setServiceLight(LIGHT_DISABLED);
-  xTaskCreatePinnedToCore(taskUpdateSwerve, "taskUpdateSwerve", 4096, NULL, 2, NULL, 1);
-  NoU3.calibrateIMUs();
-
-  //Motor Configs
-  Drive1.setMotorCurve(0.6, 1, 0, 2);
-  Drive2.setMotorCurve(0.6, 1, 0, 2);
-  Drive3.setMotorCurve(0.6, 1, 0, 2);
-  Drive4.setMotorCurve(0.6, 1, 0, 2);
-
-  PestoLink.begin("Zorp");
+  PestoLink.begin("ROBOT NAME HERE");
   Serial.begin(115200);
+  NoU3.calibrateIMUs();
+  xTaskCreatePinnedToCore(taskUpdateSwerve, "taskUpdateSwerve", 4096, NULL, 2, NULL, 1);
+  NoU3.setServiceLight(LIGHT_DISABLED);
 }
-
-void loop() {
-  //debug
-  if (AM_DEBUGGING & (millis() - lastOffsetTime) > 50) {
-    Serial.println("Robot Angle");
-    Serial.println(theta);
-    if (PestoLink.buttonHeld(0))
-      mod1Offset++;
-    Serial.println("Mod 1 Offset:");
-    Serial.println(mod1Offset);
-    if (PestoLink.buttonHeld(1))
-      mod2Offset++;
-    Serial.println("Mod 2 Offset:");
-    Serial.println(mod2Offset);
-    if (PestoLink.buttonHeld(2))
-      mod3Offset++;
-    Serial.println("Mod 3 Offset:");
-    Serial.println(mod3Offset);
-    if (PestoLink.buttonHeld(3))
-      mod4Offset++;
-    Serial.println("Mod 4 Offset:");
-    Serial.println(mod4Offset);
-
-    lastOffsetTime = millis();
-  }
-}
+void loop() {}
 
 void taskUpdateSwerve(void* pvParameters) {
   while (true) {
 
-    // Set up Gyro and its variables
+    // Set up Gyro variables and take inputs
     theta = NoU3.yaw - headingOffset;
+    driveAngle = atan2(PestoLink.getAxis(1), PestoLink.getAxis(0));
+    driveMag = sqrt(pow(PestoLink.getAxis(1), 2) + pow(PestoLink.getAxis(0), 2));
+    turnMag = PestoLink.getAxis(2);
 
-    // get magnitude and direction and assign to drivetrainVectors array, add offsets
-    // set turn vector magnitude
     // set RSL based on whether a gamepad is connected
-    // ANGLES IN RADIANS
     if (PestoLink.isConnected()) {
 
-      driveAngle = atan2(PestoLink.getAxis(1), PestoLink.getAxis(0));
-      driveMag = sqrt(pow(PestoLink.getAxis(1), 2) + pow(PestoLink.getAxis(0), 2));
-      turnMag = PestoLink.getAxis(2);
-
-      drivetrainVectors[0][0] = driveMag;
+      /*drivetrainVectors[0][0] = driveMag;
       drivetrainVectors[0][1] = driveAngle + ((mod1Offset + theta) * (PI / 180));
 
       drivetrainVectors[1][0] = driveMag;
@@ -102,28 +84,19 @@ void taskUpdateSwerve(void* pvParameters) {
       drivetrainVectors[2][1] = driveAngle + ((mod3Offset + theta) * (PI / 180));
 
       drivetrainVectors[3][0] = driveMag;
-      drivetrainVectors[3][1] = driveAngle + ((mod4Offset + theta) * (PI / 180));
+      drivetrainVectors[3][1] = driveAngle + ((mod4Offset + theta) * (PI / 180));*/
 
       NoU3.setServiceLight(LIGHT_ENABLED);
     } else {
       NoU3.setServiceLight(LIGHT_DISABLED);
     }
+    
+    drivetrain.holonomicDrive(driveAngle, driveMag, turnMag, theta);
 
     //Heading Offset Control
+    if (PestoLink.isConnected() && PestoLink.buttonHeld(10) && PestoLink.buttonHeld(11)) headingOffset = NoU3.yaw;
 
-    if (PestoLink.isConnected() && PestoLink.buttonHeld(10) && PestoLink.buttonHeld(11)) {
-      headingOffset = NoU3.yaw;
-    }
-
-
-
-    //Vector Addition
-    //Finds the component form of the current drive vector on the unit circle for each individual module
-    //Uses the fact that turn vector is always 0 degrees, adds it to x coordinate.
-    //reconverts back into magnitude and directon form
-    //ANGLES IN DEGREES
-
-    double xCord1 = drivetrainVectors[0][0] * cos(drivetrainVectors[0][1]) + turnMag;
+    /*double xCord1 = drivetrainVectors[0][0] * cos(drivetrainVectors[0][1]) + turnMag;
     double yCord1 = drivetrainVectors[0][0] * sin(drivetrainVectors[0][1]);
 
     double xCord2 = drivetrainVectors[1][0] * cos(drivetrainVectors[1][1]) + turnMag;
@@ -217,14 +190,18 @@ void taskUpdateSwerve(void* pvParameters) {
     } else {
       Turn1.write(0);
       Drive1.setBrakeMode(true);
+      Drive1.set(0);
       Turn2.write(0);
       Drive2.setBrakeMode(true);
+      Drive2.set(0);
       Turn3.write(0);
       Drive3.setBrakeMode(true);
+      Drive3.set(0);
       Turn4.write(0);
       Drive4.setBrakeMode(true);
-    }
-
+      Drive4.set(0);
+    }*/
+    
     vTaskDelay(pdMS_TO_TICKS(10));  //this line is like arduino delay() but for rtos tasks
   }
 }

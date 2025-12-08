@@ -1,0 +1,44 @@
+#include "SwerveDrivetrain.h"
+#include <cmath>
+
+SwerveDrivetrain::SwerveDrivetrain(SwerveModule *m1, SwerveModule *m2, SwerveModule *m3, SwerveModule *m4) {
+    module[0] = m1;
+    module[1] = m2;
+    module[2] = m3;
+    module[3] = m4;
+}
+
+double SwerveDrivetrain::maxMagnitude(double arr[4]) {
+    double maxVal = 0;
+    for (int i = 0; i < 4; i++) {
+        if (arr[i] > maxVal) maxVal = arr[i];
+    }
+    return maxVal;
+}
+
+void SwerveDrivetrain::holonomicDrive(double driveAngle, double driveMag, double turnMag, double theta) {
+    double magnitudes[4];
+
+    // Assign vectors and add turn component
+    for (int i = 0; i < 4; i++) {
+        module[i]->assignDrivetrainVector(driveAngle, driveMag, turnMag, theta);
+        module[i]->addTurnVector(turnMag);
+        module[i]->calculatePosition();
+        magnitudes[i] = module[i]->magnitude;
+    }
+
+    // Scale if any magnitude exceeds 1
+    double maxMag = maxMagnitude(magnitudes);
+    if (maxMag > 1) {
+        for (int i = 0; i < 4; i++) {
+            module[i]->magnitude /= maxMag;
+            module[i]->xCord /= maxMag;
+            module[i]->yCord /= maxMag;
+        }
+    }
+
+    // Write to hardware
+    for (int i = 0; i < 4; i++) {
+        module[i]->write();
+    }
+}
