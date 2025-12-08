@@ -3,7 +3,7 @@
 
 #define PI 3.14159265359
 
-SwerveModule::SwerveModule(NoU_Motor *motor, NoU_Servo *servo, int minPulse, int maxPulse, int id) {
+SwerveModule::SwerveModule(NoU_Motor *motor, NoU_Servo *servo) {
     this->Drive = motor;
     this->Turn = servo;
     Drive->setBrakeMode(true);

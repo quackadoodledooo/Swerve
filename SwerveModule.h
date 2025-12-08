@@ -7,7 +7,7 @@
 
 class SwerveModule {
 public:
-    SwerveModule(NoU_Motor *motor, NoU_Servo *servo, int minPulse, int maxPulse, int id);
+    SwerveModule(NoU_Motor *motor, NoU_Servo *servo);
     void assignDrivetrainVector(double driveAngle, double driveMag, double turnMag, double theta);
     void addTurnVector(double turnMag);
     void calculatePosition();

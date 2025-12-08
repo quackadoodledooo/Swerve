@@ -37,10 +37,10 @@ NoU_Motor Drive4(1);
 NoU_Servo Turn4(4, 500, 2500);
 
 //swerve module declaration
-SwerveModule module1(&Drive1, &Turn1, 500, 2500, 1);
-SwerveModule module2(&Drive2, &Turn2, 500, 2500, 2);
-SwerveModule module3(&Drive3, &Turn3, 500, 2500, 3);
-SwerveModule module4(&Drive4, &Turn4, 500, 2500, 4);
+SwerveModule module1(&Drive1, &Turn1);
+SwerveModule module2(&Drive2, &Turn2);
+SwerveModule module3(&Drive3, &Turn3);
+SwerveModule module4(&Drive4, &Turn4);
 
 //swerve drivetrain declaration
 SwerveDrivetrain drivetrain(&module1, &module2, &module3, &module4);
