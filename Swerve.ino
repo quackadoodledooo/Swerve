@@ -10,14 +10,16 @@
 #define PI 3.14159265359
 
 //Swerve vars
-double turnMag = 0.0;
+double rotController = 0.0;
+double frontController = 0.0;
+double sideController = 0.0;
 double driveAngle = 0.0;
 double driveMag = 0.0;
 double drivetrainVectors[4][2] = { { 0, 0 },
                                   { 0, 0 },
                                   { 0, 0 },
                                   { 0, 0 } };
-double theta;
+double rotRobot;
 double headingOffset = 0.0;
 int mod1Offset = 405;
 int mod2Offset = 135;
@@ -65,16 +67,16 @@ void loop() {}
 void taskUpdateSwerve(void* pvParameters) {
   while (true) {
     // Set up Gyro variables and take inputs
-    theta = NoU3.yaw - headingOffset;
-    driveAngle = atan2(PestoLink.getAxis(1), PestoLink.getAxis(0));
-    driveMag = sqrt(pow(PestoLink.getAxis(1), 2) + pow(PestoLink.getAxis(0), 2));
-    turnMag = PestoLink.getAxis(2);
+    rotRobot = NoU3.yaw - headingOffset;
+    sideController = PestoLink.getAxis(0);
+    frontController = PestoLink.getAxis(1);
+    rotController = PestoLink.getAxis(2);
 
     // set RSL based on whether a gamepad is connected
     if (PestoLink.isConnected()) NoU3.setServiceLight(LIGHT_ENABLED);
     else NoU3.setServiceLight(LIGHT_DISABLED);
     
-    drivetrain.holonomicDrive(driveAngle, driveMag, turnMag, theta);
+    drivetrain.holonomicDrive(sideController, frontController, rotController, rotRobot);
 
     //Heading Offset Control
     if (PestoLink.isConnected() && PestoLink.buttonHeld(10) && PestoLink.buttonHeld(11)) headingOffset = NoU3.yaw;
