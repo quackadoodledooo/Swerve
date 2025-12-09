@@ -1,6 +1,6 @@
 #include "SwerveDrivetrain.h"
 #include <cmath>
-
+//create new drivetrain
 SwerveDrivetrain::SwerveDrivetrain(SwerveModule *m1, SwerveModule *m2, SwerveModule *m3, SwerveModule *m4) {
     module[0] = m1;
     module[1] = m2;
@@ -15,12 +15,7 @@ double SwerveDrivetrain::maxMagnitude(double arr[4]) {
     }
     return maxVal;
 }
-/*
-    @param axis0 - the left/right axis
-    @param axis1 - the forward/backward axis
-    @param turnMag - the rotation axis
-    @param theta - the current robot rotation
-*/
+// drive robot
 void SwerveDrivetrain::holonomicDrive(double axis0, double axis1, double turnMag, double theta) {
     double driveAngle = atan2(axis1, axis0);
     double driveMag = sqrt(pow(axis1, 2) + pow(axis0, 2));

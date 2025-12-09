@@ -2,7 +2,7 @@
 #define SWERVE_DRIVETRAIN
 
 #include "SwerveModule.h"
-
+//Pulls together modules and coordinates them
 class SwerveDrivetrain {
 public:
     SwerveDrivetrain(SwerveModule *m1, SwerveModule *m2, SwerveModule *m3, SwerveModule *m4);

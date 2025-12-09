@@ -5,6 +5,7 @@
 #include <Alfredo_NoU3.h>
 #include <PestoLink-Receive.h>
 
+//single module for swerve, controls motor and servo
 class SwerveModule {
 public:
     SwerveModule(NoU_Motor *motor, NoU_Servo *servo);
