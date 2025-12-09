@@ -13,12 +13,6 @@
 double rotController = 0.0;
 double frontController = 0.0;
 double sideController = 0.0;
-double driveAngle = 0.0;
-double driveMag = 0.0;
-double drivetrainVectors[4][2] = { { 0, 0 },
-                                  { 0, 0 },
-                                  { 0, 0 },
-                                  { 0, 0 } };
 double rotRobot;
 double headingOffset = 0.0;
 int mod1Offset = 405;
@@ -26,7 +20,6 @@ int mod2Offset = 135;
 int mod3Offset = 315;
 int mod4Offset = 225;
 int lastOffsetTime = millis();
-const bool AM_DEBUGGING = false;
 
 //swerve motors and servos declaration
 NoU_Motor Drive1(4);
