@@ -64,7 +64,6 @@ void loop() {}
 
 void taskUpdateSwerve(void* pvParameters) {
   while (true) {
-
     // Set up Gyro variables and take inputs
     theta = NoU3.yaw - headingOffset;
     driveAngle = atan2(PestoLink.getAxis(1), PestoLink.getAxis(0));
@@ -72,12 +71,8 @@ void taskUpdateSwerve(void* pvParameters) {
     turnMag = PestoLink.getAxis(2);
 
     // set RSL based on whether a gamepad is connected
-    if (PestoLink.isConnected()) {
-
-      NoU3.setServiceLight(LIGHT_ENABLED);
-    } else {
-      NoU3.setServiceLight(LIGHT_DISABLED);
-    }
+    if (PestoLink.isConnected()) NoU3.setServiceLight(LIGHT_ENABLED);
+    else NoU3.setServiceLight(LIGHT_DISABLED);
     
     drivetrain.holonomicDrive(driveAngle, driveMag, turnMag, theta);
 
